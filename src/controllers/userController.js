@@ -1,10 +1,13 @@
-const User = require("../models/userModel");
+const { User, validate } = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 // Create a new user (registration)
 const createUser = async (req, res) => {
   try {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
     const { username, password, deposit, role } = req.body;
 
     // Check if the user already exists
@@ -46,13 +49,13 @@ const loginUser = async (req, res) => {
     }
 
     // Compare the provided password with the stored hash
-    const passwordMatch = bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Generate a JWT token for authentication
-    console.log("SECRET_KEY:", process.env.SECRET_KEY);
+    // console.log("SECRET_KEY:", process.env.SECRET_KEY);
 
     const token = user.generateAuthToken();
 
