@@ -1,0 +1,42 @@
+// // require("dotenv").config();
+
+// const express = require("express");
+// // const mongoose = require("mongoose");
+// const bodyparser = require("body-parser");
+// const authMiddleware = require("./middlewares/authMiddleware");
+// const { mongoDbConnect } = require("./database/conn");
+
+// const app = express();
+// const port = process.env.PORT || 3000;
+
+// // mongoose.connect(process.env.MONGODB_URI, {
+// //   useNewUrlParser: true,
+// //   useUnifiedTopology: true,
+// //   useCreateIndex: true,
+// // });
+
+// app.use(bodyparser.urlencoded({ extended: false }));
+// app.use(bodyparser.json());
+
+// // Routes
+// app.use("/auth", authRoutes);
+
+// // Authenticate user for all routes below this middleware
+// app.use(authMiddleware);
+
+// app.use("/users", userRoutes);
+// app.use("/products", productRoutes);
+
+// mongoDbConnect()
+//   .then(() => {
+//     try {
+//       app.listen(port, () => {
+//         console.log(`Server is running on port ${port}`);
+//       });
+//     } catch (error) {
+//       console.log("Can't connect to the server");
+//     }
+//   })
+//   .catch((error) => {
+//     console.log("Invalid Database Connection...!");
+//   });
