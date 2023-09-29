@@ -1,13 +1,18 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
+const { MongoMemoryServer } = require("mongodb-memory-server");
 const server = require("./../src/app");
 let userAccessToken; // Store the user's access token for creating a product
 let productId; // Store the product ID for future tests
 
 describe("Product Tests", () => {
+  let mongoServer;
   beforeEach(async () => {
-    console.log("process.env.MONGODB_URI", process.env.MONGODB_URI);
-    await mongoose.connect(process.env.MONGODB_URI);
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    console.log("Mongo Db in Memory uri", mongoUri);
+    await mongoose.connect(mongoUri);
+    // await mongoose.connect(process.env.MONGODB_URI);
   });
   afterEach(async () => {
     await mongoose.connection.close();
