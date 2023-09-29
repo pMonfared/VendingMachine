@@ -1,27 +1,33 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
+const authRoleBuyerMiddleware = require("../middlewares/authRoleBuyerMiddleware");
+
 const {
   createProduct,
   getAllProducts,
   updateProduct,
   deleteProduct,
+  buyProducts,
 } = require("../controllers/productContoller");
 
 const router = express.Router();
 
-// Create a new product (seller authentication required)
-router.post("/", authMiddleware, createProduct);
-
-// Get all products (no authentication required)
-router.get("/", getAllProducts);
-
 // Authenticate seller for the following routes
 router.use(authMiddleware);
 
-// Update product (seller authentication required)
+// Create a new product (no role authentication required)
+router.post("/", createProduct);
+
+// Get all products (no role authentication required)
+router.get("/", getAllProducts);
+
+// Update product (product.seller be user who send request authentication required)
 router.put("/:id", updateProduct);
 
-// Delete product (seller authentication required)
+// Delete product (product.seller be user who send request authentication required)
 router.delete("/:id", deleteProduct);
+
+// Buy products with the deposited money (buyer role authentication required)
+router.post("/buy", authRoleBuyerMiddleware, buyProducts);
 
 module.exports = router;

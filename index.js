@@ -1,7 +1,4 @@
-const express = require("express");
-
-const app = express();
-require("./src/routes")(app);
+const app = require("./src/app");
 require("./src/database")();
 
 const port = process.env.PORT || 3000;

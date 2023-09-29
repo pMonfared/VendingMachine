@@ -20,12 +20,14 @@ const createUser = async (req, res) => {
       username,
       password: hashedPassword,
       deposit,
-      role,
+      role: role.toLowerCase(),
     });
 
     await newUser.save();
 
-    res.status(201).json(newUser);
+    const token = newUser.generateAuthToken();
+
+    res.status(201).header("x-auth-token", token).json(newUser);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -50,12 +52,11 @@ const loginUser = async (req, res) => {
     }
 
     // Generate a JWT token for authentication
-
     console.log("SECRET_KEY:", process.env.SECRET_KEY);
 
-    const token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY);
+    const token = user.generateAuthToken();
 
-    res.json({ token, user });
+    res.header("x-auth-token", token).json({ token, user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -128,10 +129,60 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Deposit coins into the user's account
+const depositCoins = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const user = req.user; // Assuming user information is attached via middleware
+
+    // Check if the user has a "buyer" role
+    if (user.role !== "buyer") {
+      return res.status(403).json({ message: "Permission denied" });
+    }
+
+    // Validate the deposited coin amount (5, 10, 20, 50, or 100 cents)
+    if (![5, 10, 20, 50, 100].includes(amount)) {
+      return res.status(400).json({ message: "Invalid coin denomination" });
+    }
+
+    // Update the user's deposit balance
+    user.deposit += amount;
+    await user.save();
+
+    res.json({ message: "Deposit successful", deposit: user.deposit });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Reset the user's deposit balance to 0
+const resetDeposit = async (req, res) => {
+  try {
+    const user = req.user; // Assuming user information is attached via middleware
+
+    // Check if the user has a "buyer" role
+    if (user.role !== "buyer") {
+      return res.status(403).json({ message: "Permission denied" });
+    }
+
+    // Reset the user's deposit balance to 0
+    user.deposit = 0;
+    await user.save();
+
+    res.json({ message: "Deposit reset to 0", deposit: user.deposit });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createUser,
   loginUser,
   getUserById,
   updateUser,
   deleteUser,
+  depositCoins,
+  resetDeposit,
 };

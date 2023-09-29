@@ -89,9 +89,79 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Buy products with the deposited money
+const buyProducts = async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    const user = req.user; // Assuming user information is attached via middleware
+
+    // Check if the user has a "buyer" role
+    if (user.role !== "buyer") {
+      return res.status(403).json({ message: "Permission denied" });
+    }
+
+    // Validate the product ID
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Calculate the total cost based on the product's price and quantity
+    const totalCost = product.cost * quantity;
+
+    // Check if the user has enough deposit to make the purchase
+    if (user.deposit < totalCost) {
+      return res.status(400).json({ message: "Insufficient funds" });
+    }
+
+    // Deduct the purchase amount from the user's deposit
+    user.deposit -= totalCost;
+    await user.save();
+
+    // Update the product's quantity
+    product.amountAvailable -= quantity;
+    await product.save();
+
+    // Calculate and return any change to the user
+    const change = calculateChange(totalCost, user.deposit);
+
+    res.json({
+      message: "Purchase successful",
+      totalSpent: totalCost,
+      productsPurchased: {
+        productId: product._id,
+        productName: product.productName,
+        quantity,
+      },
+      change,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Helper function to calculate change in coins
+function calculateChange(totalCost, userDeposit) {
+  const change = userDeposit - totalCost;
+  const coinDenominations = [100, 50, 20, 10, 5];
+  const changeCoins = {};
+
+  for (const denomination of coinDenominations) {
+    if (change >= denomination) {
+      const count = Math.floor(change / denomination);
+      changeCoins[denomination] = count;
+      change -= count * denomination;
+    }
+  }
+
+  return changeCoins;
+}
+
 module.exports = {
   createProduct,
   getAllProducts,
   updateProduct,
   deleteProduct,
+  buyProducts,
 };
