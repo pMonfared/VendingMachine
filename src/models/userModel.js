@@ -35,8 +35,17 @@ function validateUser(user) {
   return schema.validate(user);
 }
 
+function validateDeposit(user) {
+  const schema = Joi.object({
+    amount: Joi.number().valid(5, 10, 20, 50, 100).required(),
+  });
+
+  return schema.validate(user);
+}
+
 const User = mongoose.model("User", userSchema);
 module.exports = {
   User,
   validate: validateUser,
+  validateDeposit: validateDeposit,
 };

@@ -1,14 +1,16 @@
-const { User, validate } = require("../models/userModel");
+const { User, validate, validateDeposit } = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const _ = require("lodash");
 
 // Create a new user (registration)
 const createUser = async (req, res) => {
   try {
     const { error } = validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if (error)
+      return res.status(400).send({ message: error.details[0].message });
 
-    const { username, password, deposit, role } = req.body;
+    const { username, password, role } = req.body;
 
     // Check if the user already exists
     const existingUser = await User.findOne({ username });
@@ -22,7 +24,7 @@ const createUser = async (req, res) => {
     const newUser = new User({
       username,
       password: hashedPassword,
-      deposit,
+      deposit: 0,
       role: role.toLowerCase(),
     });
 
@@ -30,7 +32,9 @@ const createUser = async (req, res) => {
 
     const token = newUser.generateAuthToken();
 
-    res.status(201).header("x-auth-token", token).json(newUser);
+    const user = _.pick(newUser, ["username", "role"]);
+
+    res.status(201).header("x-auth-token", token).json({ token, user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -43,13 +47,13 @@ const loginUser = async (req, res) => {
     const { username, password } = req.body;
 
     // Check if the user exists
-    const user = await User.findOne({ username });
-    if (!user) {
+    const existUser = await User.findOne({ username });
+    if (!existUser) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Compare the provided password with the stored hash
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, existUser.password);
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -57,7 +61,11 @@ const loginUser = async (req, res) => {
     // Generate a JWT token for authentication
     // console.log("SECRET_KEY:", process.env.SECRET_KEY);
 
-    const token = user.generateAuthToken();
+    const token = existUser.generateAuthToken();
+
+    const user = _.pick(existUser, ["username", "role"]);
+
+    console.log("user", user);
 
     res.header("x-auth-token", token).json({ token, user });
   } catch (error) {
@@ -135,6 +143,10 @@ const deleteUser = async (req, res) => {
 // Deposit coins into the user's account
 const depositCoins = async (req, res) => {
   try {
+    const { error } = validateDeposit(req.body);
+    if (error)
+      return res.status(400).send({ message: error.details[0].message });
+
     const { amount } = req.body;
     const user = req.user; // Assuming user information is attached via middleware
 
