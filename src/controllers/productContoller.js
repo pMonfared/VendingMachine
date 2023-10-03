@@ -1,3 +1,4 @@
+// Import required models
 const Product = require("../models/productModel");
 const SoldProduct = require("../models/soldProductModel");
 const { User } = require("../models/userModel");
@@ -5,9 +6,11 @@ const { User } = require("../models/userModel");
 // Create a new product
 const createProduct = async (req, res) => {
   try {
+    // Extract product details from the request body
     const { amountAvailable, cost, productName } = req.body;
     const sellerId = req.user._id; // Assuming we have middleware to attach user info
 
+    // Create a new product instance
     const newProduct = new Product({
       amountAvailable,
       cost,
@@ -15,8 +18,10 @@ const createProduct = async (req, res) => {
       sellerId,
     });
 
+    // Save the new product to the database
     await newProduct.save();
 
+    // Respond with the created product
     res.status(201).json(newProduct);
   } catch (error) {
     console.error(error);
@@ -27,7 +32,16 @@ const createProduct = async (req, res) => {
 // Get a list of all products
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    // Retrieve user information from the request (assuming attached via middleware)
+    const user = req.user;
+
+    // Query products based on user role (seller or buyer)
+    const products =
+      user.role === "seller"
+        ? await Product.find({ sellerId: user._id })
+        : await Product.find();
+
+    // Respond with the list of products
     res.json(products);
   } catch (error) {
     console.error(error);
@@ -35,12 +49,13 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// Get a list of all products
+// Get a list of all products bought by a user
 const getAllBoughtProducts = async (req, res) => {
   try {
-    const user = req.user; // Assuming user information is attached via middleware
+    // Retrieve user information from the request (assuming attached via middleware)
+    const user = req.user;
 
-    // Find all sold products for the current user
+    // Find all sold products for the current user and populate product details
     const boughtProducts = await SoldProduct.find({
       buyerId: user._id,
     }).populate({
@@ -62,6 +77,7 @@ const getAllBoughtProducts = async (req, res) => {
       };
     });
 
+    // Respond with the list of bought products and their details
     res.json(productsWithDetails);
   } catch (error) {
     console.error(error);
@@ -72,26 +88,33 @@ const getAllBoughtProducts = async (req, res) => {
 // Update a product
 const updateProduct = async (req, res) => {
   try {
+    // Extract product ID and updated details from the request
     const productId = req.params.id;
     const { amountAvailable, cost, productName } = req.body;
     const sellerId = req.user._id; // Assuming we have middleware to attach user info
 
+    // Find the product by ID
     const product = await Product.findById(productId);
 
+    // Check if the product exists
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Check if the user has permission to update the product
     if (product.sellerId.toString() !== sellerId.toString()) {
       return res.status(403).json({ message: "Permission denied" });
     }
 
+    // Update product details
     product.amountAvailable = amountAvailable;
     product.cost = cost;
     product.productName = productName;
 
+    // Save the updated product
     await product.save();
 
+    // Respond with the updated product
     res.json(product);
   } catch (error) {
     console.error(error);
@@ -102,21 +125,27 @@ const updateProduct = async (req, res) => {
 // Delete a product
 const deleteProduct = async (req, res) => {
   try {
+    // Extract product ID and user ID from the request
     const productId = req.params.id;
     const sellerId = req.user._id; // Assuming we have middleware to attach user info
 
+    // Find the product by ID
     const product = await Product.findById(productId);
 
+    // Check if the product exists
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Check if the user has permission to delete the product
     if (product.sellerId.toString() !== sellerId.toString()) {
       return res.status(403).json({ message: "Permission denied" });
     }
 
+    // Delete the product
     await product.deleteOne();
 
+    // Respond with a success message
     res.json({ message: "Product deleted" });
   } catch (error) {
     console.error(error);
@@ -127,6 +156,7 @@ const deleteProduct = async (req, res) => {
 // Buy products with the deposited money
 const buyProducts = async (req, res) => {
   try {
+    // Extract product ID and quantity from the request
     const { productId, quantity } = req.body;
     const user = req.user; // Assuming user information is attached via middleware
 
@@ -151,11 +181,9 @@ const buyProducts = async (req, res) => {
 
     // Deduct the purchase amount from the user's deposit
     user.deposit -= totalCost;
-    await user.save();
 
     // Update the product's quantity
     product.amountAvailable -= quantity;
-    await product.save();
 
     // Calculate and return any change to the user
     const change = calculateChange(totalCost, user.deposit);
@@ -167,14 +195,21 @@ const buyProducts = async (req, res) => {
       quantity,
       price: product.cost,
     });
+
+    // Save the user, product, and sold product records
+    await user.save();
+    await product.save();
     await soldProduct.save();
 
+    // Respond with purchase details
     res.json({
       message: "Purchase successful",
+      userDeposit: user.deposit,
       totalSpent: totalCost,
       productsPurchased: {
         productId: product._id,
         productName: product.productName,
+        amountAvailable: product.amountAvailable,
         quantity,
       },
       change,
@@ -187,10 +222,11 @@ const buyProducts = async (req, res) => {
 
 // Helper function to calculate change in coins
 function calculateChange(totalCost, userDeposit) {
-  const change = userDeposit - totalCost;
+  let change = userDeposit - totalCost;
   const coinDenominations = [100, 50, 20, 10, 5];
-  const changeCoins = {};
+  let changeCoins = {};
 
+  // Calculate the change using coin denominations
   for (const denomination of coinDenominations) {
     if (change >= denomination) {
       const count = Math.floor(change / denomination);
@@ -202,11 +238,12 @@ function calculateChange(totalCost, userDeposit) {
   return changeCoins;
 }
 
+// Export all the controller functions
 module.exports = {
   createProduct,
   getAllProducts,
+  getAllBoughtProducts,
   updateProduct,
   deleteProduct,
   buyProducts,
-  getAllBoughtProducts,
 };
