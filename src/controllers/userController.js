@@ -32,7 +32,7 @@ const createUser = async (req, res) => {
 
     const token = newUser.generateAuthToken();
 
-    const user = _.pick(newUser, ["username", "role"]);
+    const user = _.pick(newUser, ["username", "role", "_id", "deposit"]);
 
     res.status(201).header("x-auth-token", token).json({ token, user });
   } catch (error) {
@@ -63,7 +63,7 @@ const loginUser = async (req, res) => {
 
     const token = existUser.generateAuthToken();
 
-    const user = _.pick(existUser, ["username", "role"]);
+    const user = _.pick(existUser, ["username", "role", "_id", "deposit"]);
 
     console.log("user", user);
 
