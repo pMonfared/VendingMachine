@@ -160,7 +160,8 @@ const deleteProduct = async (req, res) => {
 const buyProduct = async (req, res) => {
   try {
     // Extract product ID and quantity from the request
-    const { productId, quantity } = req.body;
+    const productId = req.params.id;
+    const { quantity } = req.body;
     const user = req.user; // Assuming user information is attached via middleware
 
     // Check if the user has a "buyer" role
@@ -173,6 +174,9 @@ const buyProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
+
+    if (product.amountAvailable == 0)
+      return res.status(400).json({ message: "Product is out of stock" });
 
     // Calculate the total cost based on the product's price and quantity
     const totalCost = product.cost * quantity;
@@ -209,7 +213,7 @@ const buyProduct = async (req, res) => {
       message: "Purchase successful",
       userDeposit: user.deposit,
       totalSpent: totalCost,
-      productsPurchased: {
+      productPurchased: {
         productId: product._id,
         productName: product.productName,
         amountAvailable: product.amountAvailable,

@@ -3,7 +3,7 @@ const app = require("./../src/app");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
-describe("/deposit endpoint", () => {
+describe("User Deposit Tests", () => {
   beforeEach(async () => {
     const mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();

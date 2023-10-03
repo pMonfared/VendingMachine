@@ -13,7 +13,7 @@ const sampleUserData = {
   role: "buyer",
 };
 
-describe("Product Tests", () => {
+describe("Create Product Tests", () => {
   let token = "";
   beforeAll(async () => {
     const mongoServer = await MongoMemoryServer.create();
