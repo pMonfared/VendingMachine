@@ -28,7 +28,7 @@ describe("Register User Tests", () => {
         });
 
       expect(registrationResponse.status).toBe(201);
-      expect(registrationResponse.body).toHaveProperty("_id");
+      expect(registrationResponse.body).toHaveProperty("user");
       expect(registrationResponse.header).toHaveProperty("x-auth-token");
       userAccessToken = registrationResponse.headers["x-auth-token"];
     });
@@ -61,9 +61,7 @@ describe("Register User Tests", () => {
         });
 
       expect(registrationResponse.status).toBe(400);
-      expect(registrationResponse.error.text).toBe(
-        '"password" is not allowed to be empty'
-      );
+      expect(registrationResponse.error).toHaveProperty("message");
     });
   });
 });

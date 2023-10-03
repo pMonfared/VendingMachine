@@ -8,7 +8,7 @@ const createUser = async (req, res) => {
   try {
     const { error } = validate(req.body);
     if (error)
-      return res.status(400).send({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
 
     const { username, password, role } = req.body;
 
@@ -145,7 +145,7 @@ const depositCoins = async (req, res) => {
   try {
     const { error } = validateDeposit(req.body);
     if (error)
-      return res.status(400).send({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
 
     const { amount } = req.body;
     const user = req.user; // Assuming user information is attached via middleware
