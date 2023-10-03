@@ -1,4 +1,5 @@
 const Product = require("../models/productModel");
+const SoldProduct = require("../models/soldProductModel");
 const { User } = require("../models/userModel");
 
 // Create a new product
@@ -28,6 +29,40 @@ const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find();
     res.json(products);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get a list of all products
+const getAllBoughtProducts = async (req, res) => {
+  try {
+    const user = req.user; // Assuming user information is attached via middleware
+
+    // Find all sold products for the current user
+    const boughtProducts = await SoldProduct.find({
+      buyerId: user._id,
+    }).populate({
+      path: "productId",
+      select: "productName cost", // Select the fields you want to retrieve
+    });
+
+    // Map the boughtProducts to include product details and calculate total cost
+    const productsWithDetails = boughtProducts.map((soldProduct) => {
+      const { productId, quantity, price } = soldProduct;
+      const { productName, cost } = productId;
+
+      return {
+        productId: productId._id,
+        productName,
+        quantity,
+        price,
+        totalCost: price * quantity, // Calculate the total cost
+      };
+    });
+
+    res.json(productsWithDetails);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -125,6 +160,15 @@ const buyProducts = async (req, res) => {
     // Calculate and return any change to the user
     const change = calculateChange(totalCost, user.deposit);
 
+    // Create a new sold product record
+    const soldProduct = new SoldProduct({
+      productId: product._id,
+      buyerId: user._id,
+      quantity,
+      price: product.cost,
+    });
+    await soldProduct.save();
+
     res.json({
       message: "Purchase successful",
       totalSpent: totalCost,
@@ -164,4 +208,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   buyProducts,
+  getAllBoughtProducts,
 };

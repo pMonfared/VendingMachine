@@ -8,6 +8,7 @@ const {
   updateProduct,
   deleteProduct,
   buyProducts,
+  getAllBoughtProducts,
 } = require("../controllers/productContoller");
 
 const router = express.Router();
@@ -29,5 +30,8 @@ router.delete("/:id", deleteProduct);
 
 // Buy products with the deposited money (buyer role authentication required)
 router.post("/buy", authRoleBuyerMiddleware, buyProducts);
+
+// Get all product the user bought (buyer role authentication required)
+router.get("/bought", authRoleBuyerMiddleware, getAllBoughtProducts);
 
 module.exports = router;
