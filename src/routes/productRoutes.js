@@ -33,6 +33,6 @@ router.delete("/:id", deleteProduct);
 router.post("/buy", authRoleBuyerMiddleware, buyProducts);
 
 // Get all product the user bought (buyer role authentication required)
-router.get("/bought", authRoleBuyerMiddleware, getAllBoughtProducts);
+router.get("/purchased", authRoleBuyerMiddleware, getAllBoughtProducts);
 
 module.exports = router;
