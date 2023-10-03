@@ -1,11 +1,14 @@
 // Import required models
-const Product = require("../models/productModel");
+const { Product, validateCreateProduct } = require("../models/productModel");
 const SoldProduct = require("../models/soldProductModel");
-const { User } = require("../models/userModel");
 
 // Create a new product
 const createProduct = async (req, res) => {
   try {
+    const { error } = validateCreateProduct(req.body);
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
+
     // Extract product details from the request body
     const { amountAvailable, cost, productName } = req.body;
     const sellerId = req.user._id; // Assuming we have middleware to attach user info
@@ -49,8 +52,8 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// Get a list of all products bought by a user
-const getAllBoughtProducts = async (req, res) => {
+// Get a list of all products purchased by a user
+const getAllPurchasedProducts = async (req, res) => {
   try {
     // Retrieve user information from the request (assuming attached via middleware)
     const user = req.user;
@@ -153,8 +156,8 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// Buy products with the deposited money
-const buyProducts = async (req, res) => {
+// Buy product with the deposited money
+const buyProduct = async (req, res) => {
   try {
     // Extract product ID and quantity from the request
     const { productId, quantity } = req.body;
@@ -242,8 +245,8 @@ function calculateChange(totalCost, userDeposit) {
 module.exports = {
   createProduct,
   getAllProducts,
-  getAllBoughtProducts,
+  getAllPurchasedProducts,
   updateProduct,
   deleteProduct,
-  buyProducts,
+  buyProduct,
 };

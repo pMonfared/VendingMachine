@@ -42,7 +42,7 @@ describe("Product Tests", () => {
         .send({
           productName: "product1",
           cost: 100,
-          availableAmount: 10,
+          amountAvailable: 10,
         });
 
       expect(response.status).toBe(201);
@@ -55,10 +55,45 @@ describe("Product Tests", () => {
         .send({
           productName: "",
           cost: 100,
-          availableAmount: 10,
+          amountAvailable: 10,
         });
 
       expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        '"productName" is not allowed to be empty'
+      );
+    });
+
+    it("should return 400 if the cost is 0", async () => {
+      const response = await request(app)
+        .post("/products")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          productName: "product3",
+          cost: 0,
+          amountAvailable: 10,
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        '"cost" must be greater than or equal to 1'
+      );
+    });
+
+    it("should return 400 if the availableAmount is 0", async () => {
+      const response = await request(app)
+        .post("/products")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          productName: "product4",
+          cost: 10,
+          amountAvailable: 0,
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        '"amountAvailable" must be greater than or equal to 1'
+      );
     });
   });
 
