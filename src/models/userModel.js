@@ -25,6 +25,15 @@ userSchema.methods.generateAuthToken = function () {
       role: this.role, // User's role (buyer or seller)
     },
     process.env.SECRET_KEY // Secret key used to sign the token
+    //{ expiresIn: "1h" }
+    /*
+    the expiresIn option is crucial for security and session management.
+    It ensures that tokens have a limited lifetime, reducing the risk 
+    associated with long-lived tokens. However, it requires users to reauthenticate
+    after their tokens expire, which is a common practice to enhance security.
+    The choice of the expiration time ('1h' in this case) should align with
+    your application's security requirements and user experience considerations.
+    */
   );
   return token;
 };
