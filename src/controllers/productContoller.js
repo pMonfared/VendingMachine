@@ -160,8 +160,7 @@ const deleteProduct = async (req, res) => {
 const buyProduct = async (req, res) => {
   try {
     // Extract product ID and quantity from the request
-    const productId = req.params.id;
-    const { quantity } = req.body;
+    const { productId, quantity } = req.body;
     const user = req.user; // Assuming user information is attached via middleware
 
     // Check if the user has a "buyer" role
