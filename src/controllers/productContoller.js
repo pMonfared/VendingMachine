@@ -174,6 +174,7 @@ const buyProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Check if the product is out of stock
     if (product.amountAvailable == 0)
       return res.status(400).json({ message: "Product is out of stock" });
 
