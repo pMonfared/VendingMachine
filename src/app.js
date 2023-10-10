@@ -1,12 +1,16 @@
 // Import required modules
 const express = require("express");
 const cors = require("cors");
+const swaggerDocs = require("./utils/swagger");
+const port = process.env.PORT || 3000;
 
 // Create an Express application
 const app = express();
 
+swaggerDocs(app, port);
+
 // Define allowed origins for CORS (Cross-Origin Resource Sharing)
-const allowedOrigins = ["http://localhost:5001"];
+const allowedOrigins = ["http://localhost:5001", "http://localhost:3000"];
 
 // Configure CORS options
 const corsOptions = {
